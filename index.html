@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Emotion Tracker</title>
+    <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Facial Emotion Tracker</h1>
+            <p class="subtitle">Real-time emotion detection using your webcam</p>
+        </header>
+
+        <main>
+            <!-- Loading overlay -->
+            <div id="loading-overlay" class="loading-overlay">
+                <div class="loader"></div>
+                <p id="loading-text">Loading AI models...</p>
+            </div>
+
+            <!-- Video container with canvas overlay -->
+            <div class="video-container">
+                <video id="video" autoplay muted playsinline></video>
+                <canvas id="overlay"></canvas>
+            </div>
+
+            <!-- Controls -->
+            <div class="controls">
+                <button id="start-btn" class="btn btn-primary" disabled>
+                    <span class="btn-icon">▶</span>
+                    Start Camera
+                </button>
+                <button id="stop-btn" class="btn btn-secondary" disabled>
+                    <span class="btn-icon">⏹</span>
+                    Stop
+                </button>
+            </div>
+
+            <!-- Emotion display panel -->
+            <div class="emotion-panel">
+                <h2>Detected Emotion</h2>
+                <div id="emotion-display" class="emotion-display">
+                    <div class="emotion-icon" id="emotion-icon">😐</div>
+                    <div class="emotion-name" id="emotion-name">Waiting...</div>
+                    <div class="confidence-container">
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidence-fill"></div>
+                        </div>
+                        <span class="confidence-text" id="confidence-text">0%</span>
+                    </div>
+                </div>
+
+                <!-- All emotions breakdown -->
+                <div class="emotions-breakdown" id="emotions-breakdown">
+                    <h3>All Expressions</h3>
+                    <div class="emotion-bars">
+                        <div class="emotion-bar-item" data-emotion="neutral">
+                            <span class="emotion-label">😐 Neutral</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-neutral"></div></div>
+                            <span class="mini-value" id="val-neutral">0%</span>
+                        </div>
+                        <div class="emotion-bar-item" data-emotion="happy">
+                            <span class="emotion-label">😊 Happy</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-happy"></div></div>
+                            <span class="mini-value" id="val-happy">0%</span>
+                        </div>
+                        <div class="emotion-bar-item" data-emotion="sad">
+                            <span class="emotion-label">😢 Sad</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-sad"></div></div>
+                            <span class="mini-value" id="val-sad">0%</span>
+                        </div>
+                        <div class="emotion-bar-item" data-emotion="angry">
+                            <span class="emotion-label">😠 Angry</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-angry"></div></div>
+                            <span class="mini-value" id="val-angry">0%</span>
+                        </div>
+                        <div class="emotion-bar-item" data-emotion="fearful">
+                            <span class="emotion-label">😨 Fearful</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-fearful"></div></div>
+                            <span class="mini-value" id="val-fearful">0%</span>
+                        </div>
+                        <div class="emotion-bar-item" data-emotion="disgusted">
+                            <span class="emotion-label">🤢 Disgusted</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-disgusted"></div></div>
+                            <span class="mini-value" id="val-disgusted">0%</span>
+                        </div>
+                        <div class="emotion-bar-item" data-emotion="surprised">
+                            <span class="emotion-label">😲 Surprised</span>
+                            <div class="mini-bar"><div class="mini-fill" id="bar-surprised"></div></div>
+                            <span class="mini-value" id="val-surprised">0%</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats panel -->
+            <div class="stats-panel">
+                <div class="stat">
+                    <span class="stat-label">FPS</span>
+                    <span class="stat-value" id="fps-counter">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Faces</span>
+                    <span class="stat-value" id="face-count">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">Status</span>
+                    <span class="stat-value" id="status">Ready</span>
+                </div>
+            </div>
+        </main>
+
+        <footer>
+            <p>Built with <a href="https://github.com/justadudewhohacks/face-api.js" target="_blank">face-api.js</a></p>
+        </footer>
+    </div>
+
+    <!-- face-api.js from CDN (vladmandic fork - actively maintained) -->
+    <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
+    
+    <!-- Application scripts -->
+    <script src="js/ui.js"></script>
+    <script src="js/faceDetection.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>
