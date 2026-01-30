@@ -244,29 +244,44 @@ const UI = {
      */
     drawBoundingBox(ctx, box, emotion) {
         const color = this.emotionColors[emotion] || '#6c5ce7';
+        const canvas = this.elements.canvas;
         
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.strokeRect(box.x, box.y, box.width, box.height);
 
-        // Draw emotion label above box
+        // Draw emotion label above box (un-mirrored so text is readable)
         if (emotion) {
             const emoji = this.emotionEmojis[emotion] || '';
             const label = `${emoji} ${emotion}`;
             
             ctx.font = '16px Segoe UI, sans-serif';
-            ctx.fillStyle = color;
-            
             const textWidth = ctx.measureText(label).width;
             const padding = 6;
             
+            // Calculate mirrored x position for the label
+            // Since canvas is CSS-mirrored, we need to flip the text back
+            const labelX = box.x;
+            const labelY = box.y - 28;
+            
+            // Save context, flip horizontally at the label position, draw text, restore
+            ctx.save();
+            
+            // Move to center of where text will be, flip, move back
+            const centerX = labelX + (textWidth + padding * 2) / 2;
+            ctx.translate(centerX, 0);
+            ctx.scale(-1, 1);
+            ctx.translate(-centerX, 0);
+            
             // Background for label
             ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            ctx.fillRect(box.x, box.y - 28, textWidth + padding * 2, 24);
+            ctx.fillRect(labelX, labelY, textWidth + padding * 2, 24);
             
             // Label text
             ctx.fillStyle = color;
-            ctx.fillText(label, box.x + padding, box.y - 10);
+            ctx.fillText(label, labelX + padding, box.y - 10);
+            
+            ctx.restore();
         }
     },
 
