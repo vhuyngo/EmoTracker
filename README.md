@@ -24,6 +24,12 @@ The application is hosted on GitHub Pages: `https://[your-username].github.io/em
 
 ## Quick Start
 
+### Install dependencies
+
+```bash
+npm install
+```
+
 ### Option 1: Local Development
 
 1. Clone this repository:
@@ -62,6 +68,8 @@ The application is hosted on GitHub Pages: `https://[your-username].github.io/em
 
 6. Your site will be available at `https://[username].github.io/emotion-track`
 
+> 💡 A GitHub Actions workflow (`.github/workflows/deploy.yml`) runs `npm run dist` and publishes the generated `dist/` folder to the `gh-pages` branch automatically on every push to `main`.
+
 ## Project Structure
 
 ```
@@ -97,6 +105,22 @@ emotion-track/
 **Requirements:**
 - HTTPS connection (required for camera access, GitHub Pages provides this)
 - WebGL support (for TensorFlow.js acceleration)
+
+## Build & Obfuscation
+
+The project ships minified and obfuscated JavaScript for deployment. Run:
+
+```bash
+npm run dist
+```
+
+This command:
+
+1. Clears `dist/`
+2. Copies `index.html`, `css/`, and `models/` into `dist/`
+3. Obfuscates every script in `js/` and exports them to `dist/js/`
+
+Use `dist/` as the published folder when serving or deploying manually.
 
 ## Configuration
 

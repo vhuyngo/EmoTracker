@@ -1,0 +1,17 @@
+{
+  "name": "emotion-track",
+  "version": "1.0.0",
+  "description": "Real-time facial emotion tracker built with face-api.js.",
+  "scripts": {
+    "clean": "rimraf dist",
+    "copy": "cpy \"index.html\" dist/ && cpy \"css/**/*\" dist/css --parents && cpy \"models/**/*\" dist/models --parents || true",
+    "obfuscate": "javascript-obfuscator js --output dist/js --config obfuscator.config.json",
+    "dist": "npm run clean && npm run copy && npm run obfuscate"
+  },
+  "devDependencies": {
+    "@vladmandic/face-api": "^1.1.0",
+    "cpy-cli": "^4.1.0",
+    "javascript-obfuscator": "^4.1.0",
+    "rimraf": "^3.0.2"
+  }
+}
