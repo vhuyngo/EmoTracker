@@ -16,7 +16,7 @@ const UI = {
         screenshotBtn: null,
         emotionIcon: null,
         emotionName: null,
-        confidenceFill: null,
+        confidenceRingFill: null,
         confidenceText: null,
         fpsCounter: null,
         faceCount: null,
@@ -90,7 +90,7 @@ const UI = {
         // Emotion display
         this.elements.emotionIcon = document.getElementById('emotion-icon');
         this.elements.emotionName = document.getElementById('emotion-name');
-        this.elements.confidenceFill = document.getElementById('confidence-fill');
+        this.elements.confidenceRingFill = document.getElementById('confidence-ring-fill');
         this.elements.confidenceText = document.getElementById('confidence-text');
         this.elements.stabilityIndicator = document.getElementById('stability-indicator');
         this.elements.calibratedIndicator = document.getElementById('calibrated-indicator');
@@ -362,7 +362,9 @@ const UI = {
         if (!emotion) {
             this.elements.emotionIcon.textContent = '😐';
             this.elements.emotionName.textContent = 'No face detected';
-            this.elements.confidenceFill.style.width = '0%';
+            if (this.elements.confidenceRingFill) {
+                this.elements.confidenceRingFill.setAttribute('stroke-dasharray', '0, 100');
+            }
             this.elements.confidenceText.textContent = '0%';
             this.elements.stabilityIndicator?.classList.add('hidden');
             return;
@@ -373,7 +375,11 @@ const UI = {
 
         this.elements.emotionIcon.textContent = emoji;
         this.elements.emotionName.textContent = emotion;
-        this.elements.confidenceFill.style.width = `${percentage}%`;
+        
+        // Update confidence ring (SVG circle)
+        if (this.elements.confidenceRingFill) {
+            this.elements.confidenceRingFill.setAttribute('stroke-dasharray', `${percentage}, 100`);
+        }
         this.elements.confidenceText.textContent = `${percentage}%`;
 
         // Update stability indicator
@@ -399,19 +405,20 @@ const UI = {
      * Update all emotion bars
      */
     updateEmotionBars(expressions) {
+        const emotions = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
+        
         if (!expressions) {
-            const emotions = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
             emotions.forEach(emotion => {
                 const barFill = document.getElementById(`bar-${emotion}`);
                 const valText = document.getElementById(`val-${emotion}`);
                 if (barFill) barFill.style.width = '0%';
                 if (valText) valText.textContent = '0%';
+                const item = document.querySelector(`.expression-item[data-emotion="${emotion}"]`);
+                if (item) item.classList.remove('active');
             });
             return;
         }
 
-        const emotions = ['neutral', 'happy', 'sad', 'angry', 'fearful', 'disgusted', 'surprised'];
-        
         // Find dominant emotion
         let maxEmotion = null;
         let maxValue = 0;
@@ -431,7 +438,7 @@ const UI = {
             
             const barFill = document.getElementById(`bar-${emotion}`);
             const valText = document.getElementById(`val-${emotion}`);
-            const barItem = document.querySelector(`.emotion-bar-item[data-emotion="${emotion}"]`);
+            const expressionItem = document.querySelector(`.expression-item[data-emotion="${emotion}"]`);
             
             if (barFill) {
                 barFill.style.width = `${percentage}%`;
@@ -442,11 +449,11 @@ const UI = {
             }
             
             // Highlight dominant emotion
-            if (barItem) {
+            if (expressionItem) {
                 if (emotion === maxEmotion) {
-                    barItem.classList.add('active');
+                    expressionItem.classList.add('active');
                 } else {
-                    barItem.classList.remove('active');
+                    expressionItem.classList.remove('active');
                 }
             }
         });

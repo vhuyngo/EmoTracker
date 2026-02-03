@@ -28,9 +28,6 @@ const App = {
         Analytics.init();
         Themes.init();
 
-        // Setup privacy banner
-        this.setupPrivacyBanner();
-
         try {
             // Load face detection models
             await FaceDetection.loadModels((text) => {
@@ -58,24 +55,6 @@ const App = {
             console.error('Initialization failed:', error);
             UI.showError(`Failed to initialize: ${error.message}. Please refresh the page and try again.`);
         }
-    },
-
-    /**
-     * Setup privacy banner
-     */
-    setupPrivacyBanner() {
-        const banner = document.getElementById('privacy-banner');
-        const dismissBtn = document.getElementById('privacy-dismiss');
-        
-        // Check if previously dismissed
-        if (localStorage.getItem('privacyBannerDismissed') === 'true') {
-            banner?.classList.add('hidden');
-        }
-
-        dismissBtn?.addEventListener('click', () => {
-            banner?.classList.add('hidden');
-            localStorage.setItem('privacyBannerDismissed', 'true');
-        });
     },
 
     /**
@@ -160,21 +139,6 @@ const App = {
      * Setup keyboard shortcuts
      */
     setupKeyboardShortcuts() {
-        // Toggle shortcuts panel
-        const shortcutsToggle = document.getElementById('shortcuts-toggle');
-        const shortcutsPanel = document.getElementById('shortcuts-panel');
-        
-        shortcutsToggle?.addEventListener('click', () => {
-            shortcutsPanel?.classList.toggle('hidden');
-        });
-
-        // Close shortcuts panel when clicking outside
-        document.addEventListener('click', (e) => {
-            if (!e.target.closest('.shortcuts-help')) {
-                shortcutsPanel?.classList.add('hidden');
-            }
-        });
-
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {
             // Ignore if typing in an input
@@ -263,20 +227,6 @@ const App = {
             this.settings.themeEnabled = e.target.checked;
         });
 
-        // Reduced motion toggle
-        const reducedMotionToggle = document.getElementById('reduced-motion-toggle');
-        reducedMotionToggle?.addEventListener('change', (e) => {
-            this.settings.reducedMotion = e.target.checked;
-            document.body.classList.toggle('reduced-motion', e.target.checked);
-        });
-
-        // Check system preference for reduced motion
-        if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-            reducedMotionToggle.checked = true;
-            this.settings.reducedMotion = true;
-            document.body.classList.add('reduced-motion');
-        }
-
         // Attention toggle
         const attentionToggle = document.getElementById('attention-toggle');
         attentionToggle?.addEventListener('change', (e) => {
@@ -293,6 +243,7 @@ const App = {
         const modalClose = document.getElementById('modal-close');
         const downloadBtn = document.getElementById('download-screenshot');
         const copyBtn = document.getElementById('copy-screenshot');
+        const modalBackdrop = document.querySelector('.modal-backdrop');
 
         modalClose?.addEventListener('click', () => {
             screenshotModal?.classList.add('hidden');
@@ -307,30 +258,8 @@ const App = {
         });
 
         // Close on backdrop click
-        screenshotModal?.addEventListener('click', (e) => {
-            if (e.target === screenshotModal) {
-                screenshotModal.classList.add('hidden');
-            }
-        });
-
-        // Offline info modal
-        const offlineModal = document.getElementById('offline-modal');
-        const offlineLink = document.getElementById('offline-info-link');
-        const offlineClose = document.getElementById('offline-modal-close');
-
-        offlineLink?.addEventListener('click', (e) => {
-            e.preventDefault();
-            offlineModal?.classList.remove('hidden');
-        });
-
-        offlineClose?.addEventListener('click', () => {
-            offlineModal?.classList.add('hidden');
-        });
-
-        offlineModal?.addEventListener('click', (e) => {
-            if (e.target === offlineModal) {
-                offlineModal.classList.add('hidden');
-            }
+        modalBackdrop?.addEventListener('click', () => {
+            screenshotModal?.classList.add('hidden');
         });
     },
 
