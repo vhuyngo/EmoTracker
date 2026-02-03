@@ -5,47 +5,195 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Emotion Tracker</title>
     <link rel="stylesheet" href="css/styles.css">
+    <meta name="description" content="Real-time facial emotion detection using AI - runs entirely in your browser">
+    <meta name="theme-color" content="#0f0f1a">
 </head>
 <body>
+    <!-- Privacy Banner -->
+    <div id="privacy-banner" class="privacy-banner" role="alert">
+        <div class="privacy-content">
+            <span class="privacy-icon">🔒</span>
+            <div class="privacy-text">
+                <strong>Your privacy is protected.</strong>
+                All processing happens locally in your browser. No video or data ever leaves your device.
+            </div>
+            <button id="privacy-dismiss" class="btn-icon-only" aria-label="Dismiss privacy notice">✕</button>
+        </div>
+    </div>
+
     <div class="container">
         <header>
             <h1>Facial Emotion Tracker</h1>
             <p class="subtitle">Real-time emotion detection using your webcam</p>
+            <div class="header-badges">
+                <span class="badge badge-privacy" title="All processing is local">
+                    <span class="badge-icon">🔒</span> Privacy-First
+                </span>
+                <span class="badge badge-ai" title="Powered by TensorFlow.js">
+                    <span class="badge-icon">🧠</span> AI-Powered
+                </span>
+            </div>
         </header>
 
         <main>
             <!-- Loading overlay -->
-            <div id="loading-overlay" class="loading-overlay">
-                <div class="loader"></div>
+            <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite">
+                <div class="loader" aria-hidden="true"></div>
                 <p id="loading-text">Loading AI models...</p>
             </div>
 
             <!-- Video container with canvas overlay -->
-            <div class="video-container">
-                <video id="video" autoplay muted playsinline></video>
-                <canvas id="overlay"></canvas>
+            <div class="video-container" id="video-container">
+                <video id="video" autoplay muted playsinline aria-label="Webcam feed"></video>
+                <canvas id="overlay" aria-hidden="true"></canvas>
+                
+                <!-- Attention indicator -->
+                <div id="attention-indicator" class="attention-indicator hidden" aria-live="polite">
+                    <span class="attention-icon">👁️</span>
+                    <span id="attention-text">Looking at camera</span>
+                </div>
+
+                <!-- Fatigue indicators -->
+                <div id="fatigue-indicators" class="fatigue-indicators hidden">
+                    <span id="blink-indicator" class="fatigue-badge" title="Blink count">
+                        👁️ <span id="blink-count">0</span>
+                    </span>
+                    <span id="yawn-indicator" class="fatigue-badge" title="Yawn count">
+                        😮 <span id="yawn-count">0</span>
+                    </span>
+                </div>
+
+                <!-- Fullscreen button -->
+                <button id="fullscreen-btn" class="btn-overlay" aria-label="Toggle fullscreen" title="Fullscreen (F)">
+                    ⛶
+                </button>
             </div>
 
             <!-- Controls -->
             <div class="controls">
-                <button id="start-btn" class="btn btn-primary" disabled>
-                    <span class="btn-icon">▶</span>
-                    Start Camera
-                </button>
-                <button id="stop-btn" class="btn btn-secondary" disabled>
-                    <span class="btn-icon">⏹</span>
-                    Stop
-                </button>
+                <div class="controls-primary">
+                    <button id="start-btn" class="btn btn-primary" disabled aria-label="Start camera">
+                        <span class="btn-icon">▶</span>
+                        Start Camera
+                    </button>
+                    <button id="stop-btn" class="btn btn-secondary" disabled aria-label="Stop camera">
+                        <span class="btn-icon">⏹</span>
+                        Stop
+                    </button>
+                    <button id="calibrate-btn" class="btn btn-secondary" disabled aria-label="Calibrate neutral face" title="Look neutral and click to calibrate">
+                        <span class="btn-icon">🎯</span>
+                        Calibrate
+                    </button>
+                </div>
+                
+                <div class="controls-secondary">
+                    <!-- Camera selector -->
+                    <div class="camera-select-wrapper">
+                        <label for="camera-select" class="visually-hidden">Select camera</label>
+                        <select id="camera-select" class="camera-select" disabled aria-label="Select camera">
+                            <option value="">Select Camera</option>
+                        </select>
+                    </div>
+                    
+                    <button id="screenshot-btn" class="btn btn-small" disabled aria-label="Take screenshot" title="Screenshot (S)">
+                        📷 Screenshot
+                    </button>
+                </div>
             </div>
+
+            <!-- Settings Panel (collapsible) -->
+            <details class="settings-panel" id="settings-panel">
+                <summary class="settings-header">
+                    <span class="settings-icon">⚙️</span>
+                    Settings & Controls
+                </summary>
+                <div class="settings-content">
+                    <div class="settings-grid">
+                        <!-- Smoothing control -->
+                        <div class="setting-item">
+                            <label for="smoothing-slider">Smoothing (EMA)</label>
+                            <div class="slider-wrapper">
+                                <input type="range" id="smoothing-slider" min="0" max="100" value="30" 
+                                       aria-label="Emotion smoothing factor">
+                                <span id="smoothing-value">0.30</span>
+                            </div>
+                            <small>Lower = more stable, slower response</small>
+                        </div>
+
+                        <!-- Stability frames -->
+                        <div class="setting-item">
+                            <label for="stability-slider">Stability Frames</label>
+                            <div class="slider-wrapper">
+                                <input type="range" id="stability-slider" min="1" max="20" value="5"
+                                       aria-label="Frames needed for stable emotion">
+                                <span id="stability-value">5</span>
+                            </div>
+                            <small>Frames before emotion is "stable"</small>
+                        </div>
+
+                        <!-- Confidence threshold -->
+                        <div class="setting-item">
+                            <label for="confidence-slider">Min Confidence</label>
+                            <div class="slider-wrapper">
+                                <input type="range" id="confidence-slider" min="10" max="90" value="50"
+                                       aria-label="Minimum detection confidence">
+                                <span id="confidence-value">50%</span>
+                            </div>
+                            <small>Minimum face detection confidence</small>
+                        </div>
+
+                        <!-- Theme toggle -->
+                        <div class="setting-item">
+                            <label for="theme-toggle">Emotion Themes</label>
+                            <div class="toggle-wrapper">
+                                <input type="checkbox" id="theme-toggle" checked aria-label="Enable emotion-based themes">
+                                <label for="theme-toggle" class="toggle-label">
+                                    <span class="toggle-text">UI colors adapt to detected emotion</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Reduced motion -->
+                        <div class="setting-item">
+                            <label for="reduced-motion-toggle">Reduced Motion</label>
+                            <div class="toggle-wrapper">
+                                <input type="checkbox" id="reduced-motion-toggle" aria-label="Reduce animations">
+                                <label for="reduced-motion-toggle" class="toggle-label">
+                                    <span class="toggle-text">Minimize animations</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Show attention -->
+                        <div class="setting-item">
+                            <label for="attention-toggle">Attention Tracking</label>
+                            <div class="toggle-wrapper">
+                                <input type="checkbox" id="attention-toggle" checked aria-label="Show attention indicator">
+                                <label for="attention-toggle" class="toggle-label">
+                                    <span class="toggle-text">Show gaze direction indicator</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </details>
 
             <!-- Emotion display panel -->
             <div class="emotion-panel">
                 <h2>Detected Emotion</h2>
                 <div id="emotion-display" class="emotion-display">
-                    <div class="emotion-icon" id="emotion-icon">😐</div>
-                    <div class="emotion-name" id="emotion-name">Waiting...</div>
+                    <div class="emotion-main">
+                        <div class="emotion-icon" id="emotion-icon" aria-hidden="true">😐</div>
+                        <div class="emotion-info">
+                            <div class="emotion-name" id="emotion-name" aria-live="polite">Waiting...</div>
+                            <div class="emotion-status">
+                                <span id="stability-indicator" class="stability-badge hidden">Stable</span>
+                                <span id="calibrated-indicator" class="calibrated-badge hidden">Calibrated</span>
+                            </div>
+                        </div>
+                    </div>
                     <div class="confidence-container">
-                        <div class="confidence-bar">
+                        <div class="confidence-bar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
                             <div class="confidence-fill" id="confidence-fill"></div>
                         </div>
                         <span class="confidence-text" id="confidence-text">0%</span>
@@ -95,6 +243,69 @@
                 </div>
             </div>
 
+            <!-- Timeline Panel -->
+            <div class="timeline-panel" id="timeline-panel">
+                <div class="timeline-header">
+                    <h3>Emotion Timeline</h3>
+                    <div class="timeline-controls">
+                        <select id="timeline-duration" aria-label="Timeline duration">
+                            <option value="60">Last 60s</option>
+                            <option value="120">Last 2min</option>
+                            <option value="300" selected>Last 5min</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="timeline-chart" id="timeline-chart">
+                    <canvas id="timeline-canvas" aria-label="Emotion timeline chart"></canvas>
+                </div>
+                <div class="timeline-legend">
+                    <span class="legend-item" data-emotion="happy"><span class="legend-color"></span> Happy</span>
+                    <span class="legend-item" data-emotion="sad"><span class="legend-color"></span> Sad</span>
+                    <span class="legend-item" data-emotion="angry"><span class="legend-color"></span> Angry</span>
+                    <span class="legend-item" data-emotion="surprised"><span class="legend-color"></span> Surprised</span>
+                    <span class="legend-item" data-emotion="neutral"><span class="legend-color"></span> Neutral</span>
+                </div>
+            </div>
+
+            <!-- Session Analytics Panel -->
+            <div class="analytics-panel" id="analytics-panel">
+                <h3>Session Analytics</h3>
+                <div class="analytics-grid">
+                    <div class="analytics-card">
+                        <div class="analytics-value" id="session-duration">0:00</div>
+                        <div class="analytics-label">Session Length</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-value" id="time-to-detect">--</div>
+                        <div class="analytics-label">Time to First Detection</div>
+                    </div>
+                    <div class="analytics-card highlight">
+                        <div class="analytics-value" id="most-frequent">--</div>
+                        <div class="analytics-label">Most Frequent Emotion</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-value" id="avg-confidence">0%</div>
+                        <div class="analytics-label">Avg Confidence</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-value" id="attention-percent">0%</div>
+                        <div class="analytics-label">Attention Rate</div>
+                    </div>
+                    <div class="analytics-card">
+                        <div class="analytics-value" id="detection-rate">0%</div>
+                        <div class="analytics-label">Face Detection Rate</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Multi-face Panel (shows when multiple faces detected) -->
+            <div class="multiface-panel hidden" id="multiface-panel">
+                <h3>Multiple Faces Detected</h3>
+                <div class="multiface-grid" id="multiface-grid">
+                    <!-- Dynamically populated -->
+                </div>
+            </div>
+
             <!-- Stats panel -->
             <div class="stats-panel">
                 <div class="stat">
@@ -110,17 +321,84 @@
                     <span class="stat-value" id="status">Ready</span>
                 </div>
             </div>
+
+            <!-- Keyboard shortcuts help -->
+            <div class="shortcuts-help" id="shortcuts-help">
+                <button class="shortcuts-toggle" id="shortcuts-toggle" aria-label="Show keyboard shortcuts">
+                    ⌨️ Shortcuts
+                </button>
+                <div class="shortcuts-panel hidden" id="shortcuts-panel">
+                    <h4>Keyboard Shortcuts</h4>
+                    <ul>
+                        <li><kbd>Space</kbd> Start/Stop camera</li>
+                        <li><kbd>C</kbd> Calibrate</li>
+                        <li><kbd>S</kbd> Screenshot</li>
+                        <li><kbd>F</kbd> Fullscreen</li>
+                        <li><kbd>T</kbd> Toggle theme</li>
+                        <li><kbd>Esc</kbd> Exit fullscreen</li>
+                    </ul>
+                </div>
+            </div>
         </main>
 
         <footer>
-            <p>Built with <a href="https://github.com/justadudewhohacks/face-api.js" target="_blank">face-api.js</a></p>
+            <p>Built with <a href="https://github.com/vladmandic/face-api" target="_blank" rel="noopener">face-api.js</a> | 
+               <a href="#" id="offline-info-link">Offline Mode Info</a>
+            </p>
         </footer>
+    </div>
+
+    <!-- Screenshot Modal -->
+    <div id="screenshot-modal" class="modal hidden" role="dialog" aria-labelledby="screenshot-title" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="screenshot-title">Session Summary</h3>
+                <button id="modal-close" class="btn-icon-only" aria-label="Close modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <canvas id="screenshot-canvas"></canvas>
+            </div>
+            <div class="modal-footer">
+                <button id="download-screenshot" class="btn btn-primary">
+                    📥 Download Image
+                </button>
+                <button id="copy-screenshot" class="btn btn-secondary">
+                    📋 Copy to Clipboard
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Offline Info Modal -->
+    <div id="offline-modal" class="modal hidden" role="dialog" aria-labelledby="offline-title" aria-modal="true">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="offline-title">Offline Mode</h3>
+                <button id="offline-modal-close" class="btn-icon-only" aria-label="Close modal">✕</button>
+            </div>
+            <div class="modal-body">
+                <p>This app can work completely offline! To enable offline mode:</p>
+                <ol>
+                    <li>Download the model files from <a href="https://github.com/vladmandic/face-api/tree/master/model" target="_blank" rel="noopener">face-api.js models</a></li>
+                    <li>Place them in the <code>models/</code> folder</li>
+                    <li>Update <code>faceDetection.js</code> to use <code>./models</code> as the model path</li>
+                </ol>
+                <p><strong>Models needed:</strong></p>
+                <ul>
+                    <li>tiny_face_detector_model-*</li>
+                    <li>face_landmark_68_model-*</li>
+                    <li>face_expression_model-*</li>
+                </ul>
+            </div>
+        </div>
     </div>
 
     <!-- face-api.js from CDN (vladmandic fork - actively maintained) -->
     <script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api/dist/face-api.min.js"></script>
     
     <!-- Application scripts -->
+    <script src="js/analytics.js"></script>
+    <script src="js/themes.js"></script>
     <script src="js/ui.js"></script>
     <script src="js/faceDetection.js"></script>
     <script src="js/main.js"></script>
